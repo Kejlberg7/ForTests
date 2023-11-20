@@ -22,5 +22,12 @@ public class GreeterTest {
         assertEquals(3, result);
     }
 
+    @Test
+    @Fast
+    public void testMultiply() {
+        Greeter3 greeter = new Greeter3();
+        int result = greeter.multiply(1, 2, 3);
+        assertEquals(6, result);
+    }
 
 }
