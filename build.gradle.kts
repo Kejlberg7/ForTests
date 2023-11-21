@@ -42,7 +42,18 @@ repositories {
 // Assuming tests are in the standard 'src/test/java' directory
 val testSourceSet: SourceSet = the<SourceSetContainer>()["test"]
 
-val aggregateTestTask = tasks.register("runAllIndividualTests")
+val aggregateTestTask = tasks.register("runAllIndividualTests") {
+    doLast{
+        // loop through each value and key set in map and print
+        println("Printing test map")
+        for ((key, value) in testMap) {
+            println("Class: $key")
+            for (v in value) {
+                println("Test: $v")
+            }
+        }
+    }
+}
 val testMap = mutableMapOf<String, MutableSet<String>>()
 testSourceSet.allSource.srcDirs.forEach { srcDir ->
     File(srcDir, "hello").walkTopDown().forEach { file ->
@@ -53,13 +64,13 @@ testSourceSet.allSource.srcDirs.forEach { srcDir ->
             val jacocoFileName = "${project.buildDir}/reports/jacoco/$taskName/jacocoTestReport.xml";
             tasks.create(updateMapTaskName) {
                 outputs.upToDateWhen { false }
+                group = "coverage"
                 doLast{
                     val documentBuilderFactory = DocumentBuilderFactory.newInstance()
                     documentBuilderFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true)
                     documentBuilderFactory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false)
                     documentBuilderFactory.isValidating = false
                     val documentBuilder = documentBuilderFactory.newDocumentBuilder()
-                    println(jacocoFileName)
                     val document = documentBuilder.parse(jacocoFileName)
                     val root = document.documentElement
 
@@ -103,6 +114,7 @@ testSourceSet.allSource.srcDirs.forEach { srcDir ->
                 sourceSets(sourceSets["main"])
                 outputs.upToDateWhen { false }
                 finalizedBy(updateMapTaskName)
+                group = "coverage"
                 reports {
                     xml.required.set(true)
                     xml.outputLocation.set(file(jacocoFileName))
@@ -132,16 +144,6 @@ testSourceSet.allSource.srcDirs.forEach { srcDir ->
             aggregateTestTask.configure {
                 dependsOn(testTask)
                 group = "coverage"
-                doLast{
-                    // loop through each value and key set in map and print
-                    for ((key, value) in testMap) {
-                        println("Class: $key")
-                        for (v in value) {
-                            println("Test: $v")
-                        }
-                    }
-                }
-
             }
         }
     }
